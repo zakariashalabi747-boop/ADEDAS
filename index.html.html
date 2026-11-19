@@ -8,6 +8,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Supabase JS client (loaded from CDN, no build step) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Supabase project config — the anon key is safe to expose client-side
+   because Row Level Security (RLS) is enabled on the products table. */
+const SUPABASE_URL  = 'https://qwjmlfvwcaidkmhmjasz.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_xiKLpTfImiMgihOQYYXHGQ_zaOjBpwN';
+const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+</script>
 <script>
 /* Global image fallback — replaces any broken photo with a branded placeholder */
 window.FALLBACK = "data:image/svg+xml;utf8," + encodeURIComponent(
@@ -1048,32 +1057,27 @@ const fmt = n => '$' + n.toFixed(2);
 const pad = n => String(n).padStart(2,'0');
 
 /* ================= DATA ================= */
-const PRODUCTS = [
- {id:'ub-light',   name:'Ultraboost Light', cat:'men', type:'shoes', price:189.99, old:219.99, badge:'SALE', sizes:['40','41','42','43','44','45'], img:'1542291026-7eec264c27ff', desc:'Responsive BOOST cushioning with a light, flexible Primeknit upper — built for endless energy on city streets.'},
- {id:'samba-og',   name:'Samba OG', cat:'men', type:'shoes', price:99.99, badge:'BESTSELLER', sizes:['40','41','42','43','44','45'], img:'1525966222134-fcfa99b8ae77', desc:'The indoor icon that conquered the streets. Leather lower, suede T-toe, timeless 3-Stripes.'},
- {id:'adizero-m',  name:'Adizero SL', cat:'men', type:'shoes', price:129.99, badge:'NEW', sizes:['40','42','43','44','45'], img:'1552674605-db6ffd4facb5', desc:'Race-day DNA for daily miles. Lightweight strike zone and Lightstrike Pro cushioning.'},
- {id:'forum-low',  name:'Forum Low', cat:'men', type:'shoes', price:119.99, sizes:['41','42','43','44'], img:'1595950653106-6c9ebd614d3a', desc:'Court heritage with a modern edge — plush leather, strap lockdown, unmistakable attitude.'},
- {id:'tiro-pants', name:'Tiro 24 Training Pants', cat:'men', type:'clothing', price:59.99, old:74.99, sizes:['S','M','L','XL'], img:'1534438327276-14e5300c3a48', desc:'AEROREADY knit track pants cut for training sessions and touchline style.'},
- {id:'ess-hd-m',   name:'Essentials 3-Stripes Hoodie', cat:'men', type:'clothing', price:74.99, sizes:['S','M','L','XL'], img:'1591047139829-d91aecb6caea', desc:'Soft fleece with the iconic 3-Stripes. Your everyday warm-up layer.'},
- {id:'d4t-tee',    name:'Designed 4 Training Tee', cat:'men', type:'clothing', price:34.99, sizes:['S','M','L','XL'], img:'1521572163474-6864f9fb17af', desc:'Sweat-wicking HEAT.RDY fabric keeps you dry from warm-up to cooldown.'},
- {id:'watch',      name:'Alumni Stainless Steel Watch', cat:'men', type:'accessories', price:129.99, badge:'NEW', sizes:['OS'], img:'1523170335258-f5ed11844a49', desc:'A minimalist three-hand watch with stainless steel case and 5 ATM water resistance.'},
- {id:'gazelle-w',  name:'Gazelle Indoor', cat:'women', type:'shoes', price:119.99, badge:'NEW', sizes:['36','37','38','39','40','41'], img:'1549298916-b41d501d3772', desc:'The terrace classic reimagined with a slim indoor silhouette and gum rubber outsole.'},
- {id:'superstar',  name:'Superstar II', cat:'women', type:'shoes', price:109.99, badge:'BESTSELLER', sizes:['36','37','38','39','40'], img:'1491553895911-0055eca6402d', desc:'Since 1969 — the shell toe that defined sneaker culture, still going legendary.'},
- {id:'adizero-w',  name:'Adizero SL W', cat:'women', type:'shoes', price:139.99, old:164.99, badge:'SALE', sizes:['36','38','39','40'], img:'1460353581641-37baddab0fa2', desc:'Feather-light speed for tempo days and race mornings.'},
- {id:'optime-leg', name:'Optime Training Leggings', cat:'women', type:'clothing', price:64.99, old:79.99, sizes:['XS','S','M','L','XL'], img:'1517836357463-d25dfeac3438', desc:'Squat-proof support with a high waistband and soft, sculpting knit.'},
- {id:'zne-hd-w',   name:'Z.N.E. Full-Zip Hoodie', cat:'women', type:'clothing', price:89.99, badge:'NEW', sizes:['XS','S','M','L'], img:'1571019613454-1cb2f99b2d8b', desc:'Premium French terry with a relaxed fit — from studio to street.'},
- {id:'otr-tee-w',  name:'Own The Run Tee', cat:'women', type:'clothing', price:34.99, old:44.99, sizes:['XS','S','M','L','XL'], img:'1509631179647-0177331693ae', desc:'Lightweight AEROREADY tee built for ventilation on every run.'},
- {id:'studio-tote',name:'Studio Tote Bag', cat:'women', type:'accessories', price:44.99, sizes:['OS'], img:'1584917865442-de89df76afd3', desc:'Spacious everyday tote with dedicated gym compartment and zip security pocket.'},
- {id:'tiro-jkt-w', name:'Tiro Track Jacket', cat:'women', type:'clothing', price:74.99, sizes:['S','M','L','XL'], img:'1529139574466-a303027c1d8b', desc:'The iconic Tiro silhouette in soft tricot with a stand-up collar.'},
- {id:'campus-k',   name:'Campus 00s C', cat:'kids', type:'shoes', price:74.99, old:89.99, sizes:['28','30','32','34'], img:'1560769629-975ec94e6a86', desc:'Chunky campus vibes sized for the next generation of style icons.'},
- {id:'tensaur-k',  name:'Tensaur Run K', cat:'kids', type:'shoes', price:54.99, sizes:['28','30','32','34'], img:'1600269452121-4f2416e55c28', desc:'Hook-and-loop straps make these light runners easy on, easy off.'},
- {id:'tee3-k',     name:'Essentials Tee 3-Pack', cat:'kids', type:'clothing', price:39.99, sizes:['4Y','6Y','8Y','10Y'], img:'1523381210434-271e8be1f52b', desc:'Three soft cotton tees — one for every adventure of the week.'},
- {id:'linear-k',   name:'Linear Fleece Hoodie K', cat:'kids', type:'clothing', price:49.99, sizes:['4Y','6Y','8Y','10Y','12Y'], img:'1441984904996-e0b6ba687e04', desc:'Cozy fleece hoodie with kangaroo pocket and 3-Stripes down the sleeves.'},
- {id:'backpack-k', name:'Classic Backpack K', cat:'kids', type:'accessories', price:34.99, sizes:['OS'], img:'1553062407-98eeb64c6a62', desc:'Just the right size for school days and weekend missions.'},
- {id:'harden-k',   name:'Harden Vol. 8 K', cat:'kids', type:'shoes', price:89.99, old:109.99, badge:'BESTSELLER', sizes:['30','32','34'], img:'1519861531473-9200262188bf', desc:'Lightstrike cushioning and grippy traction for future MVPs.'},
- {id:'rihla-ball', name:'Al Rihla Training Ball', cat:'men', type:'accessories', price:34.99, sizes:['OS'], img:'1502904550040-7534597429ae', desc:'World-Cup™ inspired training ball with a seamless thermobonded surface.'},
- {id:'airliner',   name:'Vintage Airliner Bag', cat:'women', type:'accessories', price:59.99, badge:'NEW', sizes:['OS'], img:'1548036328-c9fa89d128fa', desc:'Full-grain leather duffel with original adidas Originals hardware.'},
-];
+let PRODUCTS = [];
+/* Fetch products from Supabase (public read via the anon key + RLS).
+   Maps DB columns back to the field names the rest of the app expects. */
+async function loadProducts(){
+  if(!sb) throw new Error('Supabase client unavailable (CDN blocked?)');
+  const { data, error } = await sb.from('products').select('*').order('name',{ascending:true});
+  if(error) throw error;
+  PRODUCTS = (data || []).map(row => ({
+    id:     row.id,
+    name:   row.name,
+    cat:    row.cat,
+    type:   row.type,
+    price:  Number(row.price),
+    old:    row.old_price ? Number(row.old_price) : undefined,
+    badge:  row.badge,
+    sizes:  row.sizes || [],
+    img:    row.img,
+    desc:   row.description,
+  }));
+  return PRODUCTS;
+}
 const byId = id => PRODUCTS.find(p => p.id === id);
 const ratingFor = p => (4.5 + (p.name.length % 5) * 0.1).toFixed(1);
 const revFor    = p => 40 + (p.name.length * 7) % 250;
@@ -1615,13 +1619,33 @@ $$('a[data-info]').forEach(a => a.addEventListener('click', e => { e.preventDefa
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlays(); });
  $('#year').textContent = new Date().getFullYear();
 
-/* ================= INIT ================= */
-const newArr = [...PRODUCTS.filter(p => p.badge === 'NEW'), ...PRODUCTS.filter(p => !p.badge)].slice(0, 8);
- $('#newGrid').innerHTML = newArr.map((p, i) => cardHTML(p).replace('class="card reveal"', `class="card reveal" style="--d:${(i % 4) * .07}s"`)).join('');
- $('#saleGrid').innerHTML = PRODUCTS.filter(p => p.old).map(cardHTML).join('');
-renderCart(); renderWish();
-route(); observe();
-window.addEventListener('load', () => setTimeout(() => $('#loader').classList.add('done'), 350));
+/* ================= INIT (async — loads products from Supabase) ================= */
+async function init(){
+  try{ 
+    
+    await loadProducts();
+    const newArr = [...PRODUCTS.filter(p => p.badge === 'NEW'), ...PRODUCTS.filter(p => !p.badge)].slice(0, 8);
+    $('#newGrid').innerHTML = newArr.map((p, i) => cardHTML(p).replace('class="card reveal"', `class="card reveal" style="--d:${(i % 4) * .07}s"`)).join('');
+    $('#saleGrid').innerHTML = PRODUCTS.filter(p => p.old).map(cardHTML).join('');
+    renderCart(); renderWish();
+    route(); observe();
+  }catch(err){
+    console.error('Supabase load failed:', err);
+    const msg = '<div style="grid-column:1/-1;padding:60px 24px;text-align:center;color:#6f6f6c;font-family:Inter,sans-serif;">'
+              + '<h3 style="font-family:Archivo,sans-serif;font-weight:800;font-size:22px;margin-bottom:10px;color:#0a0a0a;">Couldn\'t load products</h3>'
+              + '<p>Make sure you ran <code>adedas_supabase.sql</code> in the Supabase SQL Editor.</p>'
+              + '<p style="margin-top:8px;font-size:13px;color:#a3a3a0;">' + (err && err.message ? err.message : '') + '</p></div>';
+    $('#newGrid').innerHTML = msg;
+    $('#saleGrid').innerHTML = msg;
+  }finally{
+    // Hide the loader. Use readyState in case the async loadProducts
+    // finished AFTER the window load event already fired.
+    const hide = () => setTimeout(() => $('#loader').classList.add('done'), 350);
+    if(document.readyState === 'complete') hide();
+    else window.addEventListener('load', hide);
+  }
+}
+init();
 })();
 </script>
 </body>
